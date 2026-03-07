@@ -1456,3 +1456,148 @@
   .dj-stats-row { padding: 18px 24px; }
   .dj-stat-value { font-size: 1.25rem; }
 }
+
+/* ===== Backup Page ===== */
+.backup-page {
+  max-width: 600px;
+  margin: 0 auto;
+}
+.backup-header {
+  margin-bottom: 28px;
+}
+.backup-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #fff;
+}
+.backup-subtitle {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+.backup-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 24px;
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+.backup-card-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.backup-card-icon.export {
+  background: var(--green-subtle);
+  color: var(--green);
+  border: 1px solid rgba(0,255,136,0.12);
+}
+.backup-card-icon.import {
+  background: rgba(59,130,246,0.08);
+  color: #60a5fa;
+  border: 1px solid rgba(59,130,246,0.12);
+}
+.backup-card-content h2 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 6px;
+}
+.backup-card-content p {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-bottom: 16px;
+}
+.backup-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 0.82rem;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.backup-btn.export {
+  background: var(--green);
+  color: #000;
+}
+.backup-btn.export:hover {
+  box-shadow: 0 0 20px rgba(0,255,136,0.3);
+  transform: translateY(-1px);
+}
+.backup-btn.export:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+.backup-btn.import {
+  background: rgba(59,130,246,0.15);
+  color: #60a5fa;
+  border: 1px solid rgba(59,130,246,0.2);
+}
+.backup-btn.import:hover {
+  background: rgba(59,130,246,0.25);
+}
+.backup-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 18px;
+  border-radius: 10px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  margin-bottom: 14px;
+}
+.backup-status.success {
+  background: rgba(0,255,136,0.08);
+  border: 1px solid rgba(0,255,136,0.15);
+  color: var(--green);
+}
+.backup-status.error {
+  background: var(--red-glow);
+  border: 1px solid rgba(255,68,102,0.15);
+  color: var(--red);
+}
+.backup-info {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 14px 18px;
+  border-radius: 10px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+}
+.backup-info svg {
+  color: var(--green-dim);
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.backup-info p {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+@media (max-width: 480px) {
+  .backup-card {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  .backup-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}

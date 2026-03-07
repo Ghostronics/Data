@@ -25,6 +25,7 @@ app.use('/api/dashboard', require('./routes/dashboard'));
 app.use('/api/ai', require('./routes/ai'));
 app.use('/api/premarket', require('./routes/premarket'));
 app.use('/api/daily-notes', require('./routes/dailyNotes'));
+app.use('/api/backup', require('./routes/backup'));
 
 // Serve frontend in production
 const distPath = path.join(__dirname, '../client/dist');

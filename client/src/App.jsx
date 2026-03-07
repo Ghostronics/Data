@@ -7,6 +7,7 @@ import TradeDetail from './pages/TradeDetail'
 import PreMarket from './pages/PreMarket'
 import AICoach from './pages/AICoach'
 import DailyJournal from './pages/DailyJournal'
+import Backup from './pages/Backup'
 
 const navItems = [
   { to: '/', label: 'Dashboard', icon: '📊' },
@@ -15,6 +16,7 @@ const navItems = [
   { to: '/premarket', label: 'Pre-Market', icon: '🔍' },
   { to: '/daily', label: 'Diario', icon: '📝' },
   { to: '/ai', label: 'AI Coach', icon: '🤖' },
+  { to: '/backup', label: 'Backup', icon: '💾' },
 ]
 
 export default function App() {
@@ -82,6 +84,7 @@ export default function App() {
           <Route path="/premarket" element={<PreMarket />} />
           <Route path="/daily" element={<DailyJournal />} />
           <Route path="/ai" element={<AICoach />} />
+          <Route path="/backup" element={<Backup />} />
         </Routes>
       </main>
     </div>

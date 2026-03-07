@@ -63,6 +63,16 @@ export const api = {
   },
   deletePremarketAnalysis: (id) => request(`/premarket/${id}`, { method: 'DELETE' }),
 
+  // Backup
+  exportBackup: async () => {
+    const res = await fetch(`${API_BASE}/backup`);
+    if (!res.ok) throw new Error('Export failed');
+    return res.json();
+  },
+  restoreBackup: async (data) => {
+    return request('/backup/restore', { method: 'POST', body: JSON.stringify(data) });
+  },
+
   // Daily Notes
   getDailyNotes: (params = {}) => {
     const qs = new URLSearchParams(params).toString();
