@@ -1,4 +1,5 @@
-import { Routes, Route, NavLink } from 'react-router-dom'
+import { useState } from 'react'
+import { Routes, Route, NavLink, useLocation } from 'react-router-dom'
 import Dashboard from './pages/Dashboard'
 import TradeList from './pages/TradeList'
 import TradeForm from './pages/TradeForm'
@@ -17,52 +18,71 @@ const navItems = [
 ]
 
 export default function App() {
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const location = useLocation()
+
+  const closeSidebar = () => setSidebarOpen(false)
+
   return (
-    <div className="flex h-screen">
-      {/* Sidebar */}
-      <aside className="w-64 bg-dark-800 border-r border-dark-600 flex flex-col flex-shrink-0">
-        <div className="p-6 border-b border-dark-600">
-          <h1 className="text-xl font-bold text-white">Trading Journal</h1>
-          <p className="text-xs text-gray-400 mt-1">AI-Powered Analysis</p>
+    <div className="app-layout">
+      {/* Mobile Header */}
+      <header className="mobile-header">
+        <button className="mobile-menu-btn" onClick={() => setSidebarOpen(!sidebarOpen)}>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            {sidebarOpen
+              ? <path d="M18 6L6 18M6 6l12 12"/>
+              : <><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></>
+            }
+          </svg>
+        </button>
+        <div className="mobile-header-title">
+          <h1>Trading Journal</h1>
+          <span>AI-Powered Analysis</span>
         </div>
-        <nav className="flex-1 p-4 space-y-1">
+      </header>
+
+      {/* Overlay */}
+      {sidebarOpen && <div className="sidebar-overlay" onClick={closeSidebar} />}
+
+      {/* Sidebar */}
+      <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
+        <div className="sidebar-brand">
+          <h1>Trading Journal</h1>
+          <p>AI-Powered Analysis</p>
+        </div>
+        <nav className="sidebar-nav">
           {navItems.map(item => (
             <NavLink
               key={item.to}
               to={item.to}
               end={item.to === '/'}
+              onClick={closeSidebar}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                  isActive
-                    ? 'bg-blue-600/20 text-blue-400 border border-blue-600/30'
-                    : 'text-gray-300 hover:bg-dark-700 hover:text-white'
-                }`
+                `sidebar-link ${isActive ? 'active' : ''}`
               }
             >
-              <span>{item.icon}</span>
-              <span className="font-medium">{item.label}</span>
+              <span className="sidebar-icon">{item.icon}</span>
+              <span className="sidebar-label">{item.label}</span>
             </NavLink>
           ))}
         </nav>
-        <div className="p-4 border-t border-dark-600 text-xs text-gray-500">
+        <div className="sidebar-footer">
           Trading Journal AI v1.0
         </div>
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto">
-        <div className="p-8">
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/trades" element={<TradeList />} />
-            <Route path="/trade/new" element={<TradeForm />} />
-            <Route path="/trade/edit/:id" element={<TradeForm />} />
-            <Route path="/trade/:id" element={<TradeDetail />} />
-            <Route path="/premarket" element={<PreMarket />} />
-            <Route path="/daily" element={<DailyJournal />} />
-            <Route path="/ai" element={<AICoach />} />
-          </Routes>
-        </div>
+      <main className="main-content">
+        <Routes>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/trades" element={<TradeList />} />
+          <Route path="/trade/new" element={<TradeForm />} />
+          <Route path="/trade/edit/:id" element={<TradeForm />} />
+          <Route path="/trade/:id" element={<TradeDetail />} />
+          <Route path="/premarket" element={<PreMarket />} />
+          <Route path="/daily" element={<DailyJournal />} />
+          <Route path="/ai" element={<AICoach />} />
+        </Routes>
       </main>
     </div>
   )
