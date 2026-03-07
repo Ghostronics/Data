@@ -1,0 +1,9 @@
+[build]
+builder = "dockerfile"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+startCommand = "node server/index.js"
+healthcheckPath = "/api/accounts"
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 3

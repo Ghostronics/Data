@@ -27,13 +27,13 @@ app.use('/api/premarket', require('./routes/premarket'));
 app.use('/api/daily-notes', require('./routes/dailyNotes'));
 
 // Serve frontend in production
-if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, '../client/dist')));
-  app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../client/dist/index.html'));
-  });
-}
+const distPath = path.join(__dirname, '../client/dist');
+app.use(express.static(distPath));
+app.get('*', (req, res) => {
+  if (req.path.startsWith('/api') || req.path.startsWith('/uploads')) return res.status(404).json({ error: 'Not found' });
+  res.sendFile(path.join(distPath, 'index.html'));
+});
 
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`Trading Journal API running on port ${PORT}`);
 });
