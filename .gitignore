@@ -4,5 +4,7 @@ dist/
 server/uploads/*
 !server/uploads/.gitkeep
 server/db/*.db
+server/db/*.db-shm
+server/db/*.db-wal
 *.log
 .DS_Store
