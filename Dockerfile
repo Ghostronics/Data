@@ -1,30 +1,31 @@
-FROM node:20-slim
+FROM node:20-bookworm-slim
 
 WORKDIR /app
 
-# Install dependencies for better-sqlite3
-RUN apt-get update && apt-get install -y python3 make g++ && rm -rf /var/lib/apt/lists/*
+# Install build dependencies for native modules (better-sqlite3, sharp)
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends python3 make g++ && \
+    rm -rf /var/lib/apt/lists/*
 
-# Copy package files
+# Copy root package files and install
 COPY package.json package-lock.json ./
+RUN npm ci --omit=dev || npm install --omit=dev
+
+# Copy client package files and install
 COPY client/package.json client/package-lock.json ./client/
+RUN cd client && npm ci || cd client && npm install
 
-# Install all dependencies
-RUN npm install
-RUN cd client && npm install
-
-# Copy source code
+# Copy all source code
 COPY . .
 
 # Build frontend
 RUN cd client && npx vite build
 
-# Create upload and db directories
+# Create necessary directories
 RUN mkdir -p server/uploads server/db
 
 ENV NODE_ENV=production
-ENV PORT=3001
 
-EXPOSE 3001
+EXPOSE ${PORT:-3001}
 
 CMD ["node", "server/index.js"]
