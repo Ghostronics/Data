@@ -94,8 +94,6 @@ export default function TradeDetail() {
             <div className="flex justify-between"><span className="text-gray-400">Salida:</span><span>{trade.exit_price || '-'}</span></div>
             <div className="flex justify-between"><span className="text-gray-400">Stop Loss:</span><span>{trade.stop_loss || '-'}</span></div>
             <div className="flex justify-between"><span className="text-gray-400">Take Profit:</span><span>{trade.take_profit || '-'}</span></div>
-            <div className="flex justify-between"><span className="text-gray-400">Comisión:</span><span>${trade.commission}</span></div>
-            <div className="flex justify-between"><span className="text-gray-400">Swap:</span><span>${trade.swap}</span></div>
             <div className="flex justify-between"><span className="text-gray-400">Timeframe:</span><span>{trade.timeframe || '-'}</span></div>
             <div className="flex justify-between"><span className="text-gray-400">Sesión:</span><span className="capitalize">{trade.session || '-'}</span></div>
           </div>
