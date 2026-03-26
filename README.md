@@ -1,108 +1,132 @@
-# Agente GG — Gamma Trading System
+# GG Order Flow — Dashboard Institucional
 
-Bot de Telegram para análisis pre-sesión institucional con GEX/DEX, mecánica de opciones y order flow.
+Dashboard web profesional de Order Flow para el Gamma Trading System de Anthony (GG).
+Dark theme inspirado en MenthorQ/SpotGamma.
+
+**Stack:** Next.js 14 · Tailwind CSS · Supabase · Claude Opus 4.6 · Vercel
 
 ---
 
 ## Qué hace
 
-- Analiza capturas de **MenthorQ** (NQ, ES, VIX GEX) enviadas desde el móvil
-- Interpreta **GEX + DEX** para determinar régimen gamma y sesgo direccional
-- Aplica filtros **VVIX y SKEW** para ajustar parámetros
-- Genera plan del día con **Setup A + B**, entrada, stop, target y R:R
-- Responde preguntas sobre mecánica gamma y order flow
-- Mantiene historial de conversación por sesión
+- **Tú subes** las capturas de MenthorQ (NQ, ES, VIX GEX) desde `/admin`
+- **Claude** extrae automáticamente todos los niveles gamma y genera el análisis completo
+- El **dashboard** se actualiza con charts propios: gauge GEX/DEX, mapa de niveles, régimen, setups A/B
+- **Historial** completo de sesiones anteriores accesible desde cualquier dispositivo
 
 ---
 
-## Requisitos
+## Setup rápido (15 min)
 
-- Python 3.11+
-- Cuenta en [Anthropic Console](https://console.anthropic.com/) (API key)
-- Bot de Telegram creado con [@BotFather](https://t.me/BotFather)
+### 1. Supabase (base de datos + imágenes)
 
----
+1. Ve a [supabase.com](https://supabase.com) → New project → crea uno gratis
+2. En el proyecto: **SQL Editor** → pega el contenido de `supabase/schema.sql` → Run
+3. Ve a **Settings → API** y copia:
+   - `Project URL`
+   - `anon public` key
+   - `service_role` key (secret)
 
-## Instalación
+### 2. Anthropic (Claude)
+
+1. Ve a [console.anthropic.com](https://console.anthropic.com) → API Keys → Create key
+
+### 3. Variables de entorno
 
 ```bash
-# 1. Clonar el repositorio
-git clone <repo-url>
-cd Data
+cp .env.example .env.local
+# Edita .env.local con tus claves
+```
 
-# 2. Crear entorno virtual
-python -m venv .venv
-source .venv/bin/activate  # Windows: .venv\Scripts\activate
+```env
+ANTHROPIC_API_KEY=sk-ant-...
+NEXT_PUBLIC_SUPABASE_URL=https://xxxxxxxx.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
+SUPABASE_SERVICE_ROLE_KEY=eyJ...
+ADMIN_PASSWORD=tu_password_segura
+```
 
-# 3. Instalar dependencias
-pip install -r requirements.txt
+### 4. Instalar y correr local
 
-# 4. Configurar variables de entorno
-cp .env.example .env
-# Editar .env con tus claves
+```bash
+npm install
+npm run dev
+# Abre http://localhost:3000
 ```
 
 ---
 
-## Configuración
+## Deploy en Vercel (gratis, acceso desde móvil y PC)
 
-Edita el archivo `.env`:
-
-| Variable | Descripción |
-|---|---|
-| `TELEGRAM_TOKEN` | Token del bot (obtenlo con @BotFather → `/newbot`) |
-| `ANTHROPIC_API_KEY` | API key de Anthropic |
-| `ALLOWED_USER_IDS` | IDs de Telegram autorizados (vacío = sin restricción) |
-
-Para obtener tu ID de Telegram: habla con [@userinfobot](https://t.me/userinfobot).
+1. Sube el repo a GitHub (ghostronics/data)
+2. Ve a [vercel.com](https://vercel.com) → New Project → importa el repo
+3. En **Environment Variables** añade las 5 variables del `.env.local`
+4. Deploy → Vercel te da una URL pública tipo `gg-orderflow.vercel.app`
 
 ---
 
-## Ejecutar
+## Uso diario
 
-```bash
-python bot.py
-```
+### Como admin (GG)
 
-El bot queda corriendo. Ábrelo en Telegram y usa `/start`.
+1. Abre `/admin` en el browser
+2. Ingresa la contraseña
+3. Escribe VVIX y SKEW (de TradingView)
+4. Sube las capturas de MenthorQ (NQ GEX, ES GEX, VIX GEX — hasta 6 imágenes)
+5. Clic en **"Generar Análisis del Día"**
+6. Claude analiza las imágenes (~20-30 seg) y el dashboard se actualiza
 
----
+### Como usuario
 
-## Comandos
-
-| Comando | Acción |
-|---|---|
-| `/start` | Inicia el bot y muestra instrucciones |
-| `/reset` | Limpia el historial de la sesión actual |
-
----
-
-## Uso desde el móvil
-
-1. Abre Telegram y busca tu bot
-2. **Captura de MenthorQ** → Comparte la imagen directamente en el chat
-   - Puedes añadir un pie de foto con contexto extra (ej: `"VVIX=115, SKEW=138"`)
-3. **Texto** → Escribe los niveles manualmente o haz preguntas conceptuales
-4. El agente responde con el análisis completo o la consulta resuelta
-
----
-
-## Despliegue 24/7 (opcional)
-
-Para mantener el bot activo permanentemente, puedes desplegarlo en:
-
-- **Railway** — gratis, conecta el repo de GitHub directamente
-- **Render** — free tier con worker service
-- **VPS / servidor propio** — corre `python bot.py` con `screen` o `systemd`
+- `/` — Dashboard de hoy con todos los charts y el análisis
+- `/history` — Lista de todas las sesiones anteriores
+- `/day/2025-03-26` — Sesión específica por fecha
 
 ---
 
 ## Estructura
 
 ```
-Data/
-├── bot.py           # Bot de Telegram + agente GG
-├── requirements.txt # Dependencias Python
-├── .env.example     # Plantilla de variables de entorno
-└── README.md
+app/
+├── page.tsx                  # Dashboard de hoy
+├── admin/page.tsx            # Panel de subida (protegido)
+├── history/page.tsx          # Historial
+├── day/[date]/page.tsx       # Día específico
+└── api/
+    ├── upload/route.ts       # POST: analizar y guardar sesión
+    └── sessions/
+        ├── route.ts          # GET: lista de sesiones
+        └── [date]/route.ts   # GET: sesión por fecha
+
+components/
+├── NavBar.tsx
+├── SessionDashboard.tsx      # Layout completo del dashboard
+├── GexGauge.tsx              # Gauge semicircular GEX/DEX
+├── LevelMap.tsx              # Mapa visual de niveles (SVG)
+├── RegimeCard.tsx            # Régimen GEX+DEX con colores
+├── InstrumentCard.tsx        # Tabla de niveles NQ/ES
+├── SetupCard.tsx             # Setup A/B con entrada/stop/target
+├── VixSection.tsx            # VIX GEX estructura
+├── FiltersBar.tsx            # Metros VVIX y SKEW
+└── AnalysisCard.tsx          # Análisis de texto completo
+
+lib/
+├── types.ts                  # TypeScript types
+├── supabase.ts               # Clientes Supabase
+└── claude.ts                 # Claude API + prompt de extracción
+
+supabase/
+└── schema.sql                # SQL para crear la tabla y bucket
 ```
+
+---
+
+## Costos estimados (uso diario)
+
+| Servicio | Plan | Costo |
+|---|---|---|
+| Vercel | Hobby (free) | $0 |
+| Supabase | Free tier | $0 |
+| Anthropic (Claude) | Pay-per-use | ~$0.05–0.10/sesión |
+
+**Total: ~$1-2/mes** en uso real (1 análisis diario × 5 días/semana).
