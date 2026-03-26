@@ -6,41 +6,42 @@ import type { UploadPayload } from "@/lib/types";
 export async function POST(req: NextRequest) {
   try {
     const body = (await req.json()) as UploadPayload;
-    const { date, vvix, skew, images, overrides } = body;
+    const { date, vvix, skew, images, manual, overrides } = body;
 
     // Validation
-    if (!date || !vvix || !skew || !images?.length) {
+    if (!date || vvix == null || skew == null) {
       return NextResponse.json({ error: "Faltan campos requeridos" }, { status: 400 });
+    }
+    if (!manual && !images?.length) {
+      return NextResponse.json({ error: "Añade al menos una imagen o usa el modo manual" }, { status: 400 });
     }
 
     const supabase = getSupabaseAdmin();
 
-    // Upload images to Supabase Storage
+    // Upload images to Supabase Storage (only in auto mode)
     const imageUrls: string[] = [];
-    for (let i = 0; i < images.length; i++) {
-      const imgBuffer = Buffer.from(images[i], "base64");
-      const fileName = `${date}/${Date.now()}_${i}.jpg`;
-
-      const { error } = await supabase.storage
-        .from("session-images")
-        .upload(fileName, imgBuffer, {
-          contentType: "image/jpeg",
-          upsert: true,
-        });
-
-      if (!error) {
-        const { data: urlData } = supabase.storage
+    if (!manual && images?.length) {
+      for (let i = 0; i < images.length; i++) {
+        const imgBuffer = Buffer.from(images[i], "base64");
+        const fileName = `${date}/${Date.now()}_${i}.jpg`;
+        const { error } = await supabase.storage
           .from("session-images")
-          .getPublicUrl(fileName);
-        imageUrls.push(urlData.publicUrl);
+          .upload(fileName, imgBuffer, { contentType: "image/jpeg", upsert: true });
+        if (!error) {
+          const { data: urlData } = supabase.storage.from("session-images").getPublicUrl(fileName);
+          imageUrls.push(urlData.publicUrl);
+        }
       }
     }
 
-    // Analyze with Claude
-    const extracted = await analyzeSessionImages(images, vvix, skew, date);
-
-    // Merge overrides (manual corrections)
-    const merged = { ...extracted, ...overrides };
+    // Analyze with Claude (auto mode) or use manual data
+    let merged: Record<string, unknown>;
+    if (manual) {
+      merged = { ...overrides };
+    } else {
+      const extracted = await analyzeSessionImages(images, vvix, skew, date);
+      merged = { ...extracted, ...overrides };
+    }
 
     // Upsert session in DB
     const sessionData = {

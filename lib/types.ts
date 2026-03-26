@@ -65,32 +65,12 @@ export interface TradingSession {
 }
 
 export interface UploadPayload {
-  password: string;
   date: string;
   vvix: number;
   skew: number;
   images: string[]; // base64 strings
-  // Optional manual overrides
-  overrides?: Partial<
-    Pick<
-      TradingSession,
-      | "nq_gex"
-      | "nq_dex"
-      | "nq_hvl_all"
-      | "nq_hvl_0dte"
-      | "nq_call_resist"
-      | "nq_put_support"
-      | "es_gex"
-      | "es_dex"
-      | "es_hvl_all"
-      | "es_hvl_0dte"
-      | "es_call_resist"
-      | "es_put_support"
-      | "vix_gex_net"
-      | "vix_call_resist"
-      | "vix_hvl"
-    >
-  >;
+  manual?: boolean; // skip Claude analysis, use overrides directly
+  overrides?: Partial<ExtractedLevels>;
 }
 
 export interface ExtractedLevels {

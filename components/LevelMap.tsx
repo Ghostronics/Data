@@ -9,6 +9,15 @@ interface LevelMapProps {
   currentPrice?: number | null;
 }
 
+interface Level {
+  value: number;
+  label: string;
+  sublabel: string;
+  color: string;
+  dashed: boolean;
+  priority: string;
+}
+
 export default function LevelMap({
   instrument,
   hvlAll,
@@ -17,196 +26,150 @@ export default function LevelMap({
   putSupport,
   currentPrice,
 }: LevelMapProps) {
-  const allLevels = [hvlAll, hvl0dte, callResist, putSupport, currentPrice].filter(
-    (v): v is number => v !== null && v !== undefined
-  );
-
-  if (allLevels.length === 0) {
-    return (
-      <div className="trading-card p-4 h-full flex items-center justify-center">
-        <p className="text-text-muted text-sm">Sin niveles</p>
-      </div>
-    );
-  }
-
-  const padding = instrument === "NQ" ? 150 : 20;
-  const minVal = Math.min(...allLevels) - padding;
-  const maxVal = Math.max(...allLevels) + padding;
-  const range = maxVal - minVal;
-
-  const toY = (val: number, height: number) =>
-    ((maxVal - val) / range) * height;
-
-  const svgWidth = 280;
-  const svgHeight = 320;
-  const leftPad = 70;
-  const rightPad = 20;
-  const topPad = 16;
-  const bottomPad = 16;
-  const chartHeight = svgHeight - topPad - bottomPad;
-  const chartWidth = svgWidth - leftPad - rightPad;
-
-  const y = (val: number) => topPad + toY(val, chartHeight);
-  const formatPrice = (v: number) =>
+  const fmt = (v: number) =>
     instrument === "NQ"
       ? v.toLocaleString("en-US", { maximumFractionDigits: 0 })
       : v.toFixed(2);
 
-  return (
-    <div className="trading-card p-4">
-      <div className="flex items-center justify-between mb-3">
-        <span className="text-xs uppercase tracking-widest text-text-secondary">
-          Mapa de Niveles — {instrument}
-        </span>
-        <div className="flex items-center gap-3 text-xs text-text-muted">
-          <span className="flex items-center gap-1">
-            <span className="inline-block w-3 h-0.5 bg-gex-negative opacity-60" />
-            Resist.
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="inline-block w-3 h-0.5 bg-white opacity-60" />
-            HVL
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="inline-block w-3 h-0.5 bg-gex-positive opacity-60" />
-            Support
-          </span>
-        </div>
+  const levels: Level[] = [];
+  if (callResist != null)
+    levels.push({ value: callResist, label: `CALL RES  ${fmt(callResist)}`, sublabel: "TECHO DURO — FADE AGRESIVO", color: "#ff4757", dashed: true, priority: "PRIMARY" });
+  if (hvlAll != null)
+    levels.push({ value: hvlAll, label: `HVL  ${fmt(hvlAll)}`, sublabel: "IMÁN — PRECIO CONVERGE AQUÍ", color: "#f39c12", dashed: false, priority: "TARGET" });
+  if (hvl0dte != null)
+    levels.push({ value: hvl0dte, label: `HVL 0DTE  ${fmt(hvl0dte)}`, sublabel: "IMÁN INTRADÍA", color: "#ffd32a", dashed: true, priority: "SECONDARY" });
+  if (putSupport != null)
+    levels.push({ value: putSupport, label: `PUT SUPPORT  ${fmt(putSupport)}`, sublabel: "SUELO FUERTE — BID AGRESIVO", color: "#00d68f", dashed: true, priority: "PRIMARY" });
+
+  const allVals = [...levels.map((l) => l.value), ...(currentPrice != null ? [currentPrice] : [])];
+  if (allVals.length === 0)
+    return (
+      <div className="trading-card p-4 flex items-center justify-center h-32">
+        <p className="text-text-muted text-sm">Sin niveles</p>
       </div>
+    );
 
-      <svg width="100%" viewBox={`0 0 ${svgWidth} ${svgHeight}`} className="overflow-visible">
-        {/* Chart area background */}
-        <rect x={leftPad} y={topPad} width={chartWidth} height={chartHeight} fill="rgba(255,255,255,0.01)" rx={4} />
+  const pad = instrument === "NQ" ? 130 : 18;
+  const minVal = Math.min(...allVals) - pad;
+  const maxVal = Math.max(...allVals) + pad;
+  const range = maxVal - minVal;
 
-        {/* Call Resistance zone */}
-        {callResist !== null && (
-          <>
-            <rect
-              x={leftPad}
-              y={topPad}
-              width={chartWidth}
-              height={Math.max(0, y(callResist) - topPad)}
-              fill="rgba(255,71,87,0.06)"
-            />
-            <line
-              x1={leftPad}
-              y1={y(callResist)}
-              x2={leftPad + chartWidth}
-              y2={y(callResist)}
-              stroke="#ff4757"
-              strokeWidth={1.5}
-            />
-            <text x={leftPad - 6} y={y(callResist) + 4} textAnchor="end" fontSize={9} fill="#ff4757" className="mono">
-              {formatPrice(callResist)}
-            </text>
-            <text x={leftPad + chartWidth + 4} y={y(callResist) + 4} fontSize={8} fill="#ff4757" opacity={0.7}>
-              CR
-            </text>
-          </>
+  const W = 420, H = 400;
+  const lp = 58, rp = 8, tp = 16, bp = 16;
+  const chartW = 130, chartH = H - tp - bp;
+  const labelX = lp + chartW + 14;
+  const labelW = W - labelX - rp;
+  const BOX_H = 36;
+
+  const toY = (v: number) => tp + ((maxVal - v) / range) * chartH;
+
+  // Sort descending by value = top to bottom
+  const sorted = [...levels].sort((a, b) => b.value - a.value);
+
+  // Compute label Y positions with anti-overlap
+  const rawYs = sorted.map((l) => toY(l.value));
+  const labelYs: number[] = [];
+  rawYs.forEach((y, i) => {
+    const ideal = Math.max(tp, Math.min(y - BOX_H / 2, tp + chartH - BOX_H));
+    if (i === 0) { labelYs.push(ideal); return; }
+    const prev = labelYs[i - 1] + BOX_H + 4;
+    labelYs.push(Math.max(ideal, prev));
+  });
+
+  // Grid price ticks
+  const ticks = [0, 0.25, 0.5, 0.75, 1].map((p) => ({
+    y: tp + p * chartH,
+    price: maxVal - p * range,
+  }));
+
+  return (
+    <div className="trading-card p-3">
+      <div className="text-xs uppercase tracking-widest text-text-secondary font-medium mb-2">
+        Niveles Gamma — {instrument}
+      </div>
+      <svg width="100%" viewBox={`0 0 ${W} ${H}`} className="overflow-visible">
+        {/* Background */}
+        <rect x={lp} y={tp} width={chartW} height={chartH} fill="rgba(255,255,255,0.015)" rx={3} />
+
+        {/* Call resistance zone */}
+        {callResist != null && (
+          <rect x={lp} y={tp} width={chartW} height={Math.max(0, toY(callResist) - tp)} fill="rgba(255,71,87,0.08)" />
+        )}
+        {/* Put support zone */}
+        {putSupport != null && (
+          <rect x={lp} y={toY(putSupport)} width={chartW} height={Math.max(0, tp + chartH - toY(putSupport))} fill="rgba(0,214,143,0.08)" />
         )}
 
-        {/* Put Support zone */}
-        {putSupport !== null && (
-          <>
-            <rect
-              x={leftPad}
-              y={y(putSupport)}
-              width={chartWidth}
-              height={Math.max(0, topPad + chartHeight - y(putSupport))}
-              fill="rgba(0,214,143,0.06)"
-            />
-            <line
-              x1={leftPad}
-              y1={y(putSupport)}
-              x2={leftPad + chartWidth}
-              y2={y(putSupport)}
-              stroke="#00d68f"
-              strokeWidth={1.5}
-            />
-            <text x={leftPad - 6} y={y(putSupport) + 4} textAnchor="end" fontSize={9} fill="#00d68f" className="mono">
-              {formatPrice(putSupport)}
+        {/* Grid ticks */}
+        {ticks.map(({ y, price }, i) => (
+          <g key={i}>
+            <line x1={lp} y1={y} x2={lp + chartW} y2={y} stroke="#1a2540" strokeWidth={0.8} />
+            <text x={lp - 5} y={y + 3.5} textAnchor="end" fontSize={8} fill="#3a4a60">
+              {fmt(price)}
             </text>
-            <text x={leftPad + chartWidth + 4} y={y(putSupport) + 4} fontSize={8} fill="#00d68f" opacity={0.7}>
-              PS
-            </text>
-          </>
-        )}
+          </g>
+        ))}
 
-        {/* HVL All Exp */}
-        {hvlAll !== null && (
-          <>
-            <line
-              x1={leftPad}
-              y1={y(hvlAll)}
-              x2={leftPad + chartWidth}
-              y2={y(hvlAll)}
-              stroke="#e8f0fe"
-              strokeWidth={1.5}
-            />
-            <text x={leftPad - 6} y={y(hvlAll) + 4} textAnchor="end" fontSize={9} fill="#e8f0fe" className="mono">
-              {formatPrice(hvlAll)}
-            </text>
-            <text x={leftPad + chartWidth + 4} y={y(hvlAll) + 4} fontSize={8} fill="#e8f0fe" opacity={0.6}>
-              HVL
-            </text>
-          </>
-        )}
-
-        {/* HVL 0DTE — dashed yellow */}
-        {hvl0dte !== null && (
-          <>
-            <line
-              x1={leftPad}
-              y1={y(hvl0dte)}
-              x2={leftPad + chartWidth}
-              y2={y(hvl0dte)}
-              stroke="#ffd32a"
-              strokeWidth={1.5}
-              strokeDasharray="5,4"
-            />
-            <text x={leftPad - 6} y={y(hvl0dte) + 4} textAnchor="end" fontSize={9} fill="#ffd32a" className="mono">
-              {formatPrice(hvl0dte)}
-            </text>
-            <text x={leftPad + chartWidth + 4} y={y(hvl0dte) + 4} fontSize={8} fill="#ffd32a" opacity={0.8}>
-              0DTE
-            </text>
-          </>
-        )}
+        {/* Level lines + label boxes */}
+        {sorted.map((level, i) => {
+          const lineY = toY(level.value);
+          const boxY = labelYs[i];
+          const midBox = boxY + BOX_H / 2;
+          return (
+            <g key={i}>
+              {/* Horizontal line across chart */}
+              <line
+                x1={lp} y1={lineY} x2={lp + chartW} y2={lineY}
+                stroke={level.color} strokeWidth={1.5}
+                strokeDasharray={level.dashed ? "6,4" : undefined}
+                opacity={0.9}
+              />
+              {/* Connector */}
+              <line
+                x1={lp + chartW} y1={lineY} x2={labelX} y2={midBox}
+                stroke={level.color} strokeWidth={0.5} opacity={0.35}
+              />
+              {/* Price on left axis */}
+              <text x={lp - 5} y={lineY + 3.5} textAnchor="end" fontSize={9} fill={level.color} fontWeight="600">
+                {fmt(level.value)}
+              </text>
+              {/* Label box */}
+              <rect x={labelX} y={boxY} width={labelW} height={BOX_H} rx={4}
+                fill={`${level.color}15`} stroke={level.color} strokeWidth={0.7} strokeOpacity={0.45} />
+              {/* Priority pill */}
+              <rect x={labelX + 6} y={boxY + 5} width={level.priority === "SECONDARY" ? 52 : 40} height={10} rx={2} fill={`${level.color}28`} />
+              <text x={labelX + 8} y={boxY + 13} fontSize={6.5} fill={level.color} opacity={0.85} letterSpacing={0.5}>
+                {level.priority}
+              </text>
+              {/* Level label */}
+              <text x={labelX + 8} y={boxY + 23} fontSize={9.5} fill={level.color} fontWeight="700">
+                {level.label}
+              </text>
+              {/* Sublabel */}
+              <text x={labelX + 8} y={boxY + 32} fontSize={7.5} fill={level.color} opacity={0.6}>
+                {level.sublabel}
+              </text>
+            </g>
+          );
+        })}
 
         {/* Current price */}
-        {currentPrice !== null && currentPrice !== undefined && (
-          <>
-            <line
-              x1={leftPad}
-              y1={y(currentPrice)}
-              x2={leftPad + chartWidth}
-              y2={y(currentPrice)}
-              stroke="#4fc3f7"
-              strokeWidth={1}
-              strokeDasharray="2,3"
-              opacity={0.8}
-            />
+        {currentPrice != null && (
+          <g>
+            <line x1={lp} y1={toY(currentPrice)} x2={lp + chartW} y2={toY(currentPrice)}
+              stroke="#4fc3f7" strokeWidth={1} strokeDasharray="3,3" opacity={0.9} />
             <polygon
-              points={`${leftPad - 2},${y(currentPrice)} ${leftPad + 8},${y(currentPrice) - 5} ${leftPad + 8},${y(currentPrice) + 5}`}
-              fill="#4fc3f7"
+              points={`${lp + 2},${toY(currentPrice)} ${lp + 11},${toY(currentPrice) - 5} ${lp + 11},${toY(currentPrice) + 5}`}
+              fill="#4fc3f7" opacity={0.9}
             />
-            <text x={leftPad - 8} y={y(currentPrice) + 4} textAnchor="end" fontSize={9} fill="#4fc3f7" className="mono">
-              {formatPrice(currentPrice)}
+            <text x={lp - 5} y={toY(currentPrice) + 3.5} textAnchor="end" fontSize={9} fill="#4fc3f7" fontWeight="600">
+              {fmt(currentPrice)}
             </text>
-          </>
+          </g>
         )}
 
         {/* Chart border */}
-        <rect
-          x={leftPad}
-          y={topPad}
-          width={chartWidth}
-          height={chartHeight}
-          fill="none"
-          stroke="#1e2a3e"
-          strokeWidth={1}
-          rx={4}
-        />
+        <rect x={lp} y={tp} width={chartW} height={chartH} fill="none" stroke="#1e2a3e" strokeWidth={1} rx={3} />
       </svg>
     </div>
   );
