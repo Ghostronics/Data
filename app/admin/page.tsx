@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
-import { Upload, X, Loader, CheckCircle, AlertCircle, Lock, Image as ImageIcon } from "lucide-react";
+import { Upload, X, Loader, CheckCircle, AlertCircle, Image as ImageIcon } from "lucide-react";
 import clsx from "clsx";
 
 interface ImageItem {
@@ -26,7 +26,6 @@ function fileToBase64(file: File): Promise<string> {
 type Status = "idle" | "loading" | "success" | "error";
 
 export default function AdminPage() {
-  const [password, setPassword] = useState("");
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [vvix, setVvix] = useState("");
   const [skew, setSkew] = useState("");
@@ -65,8 +64,8 @@ export default function AdminPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!password || !vvix || !skew) {
-      setMessage("Completa todos los campos requeridos.");
+    if (!vvix || !skew) {
+      setMessage("Completa los campos de VVIX y SKEW.");
       setStatus("error");
       return;
     }
@@ -84,7 +83,6 @@ export default function AdminPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          password,
           date,
           vvix: parseFloat(vvix),
           skew: parseFloat(skew),
@@ -111,7 +109,7 @@ export default function AdminPage() {
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
         <div className="w-9 h-9 rounded-lg bg-accent-blue/10 border border-accent-blue/20 flex items-center justify-center">
-          <Lock size={16} className="text-accent-blue" />
+          <Upload size={16} className="text-accent-blue" />
         </div>
         <div>
           <h1 className="text-base font-semibold text-text-primary">Panel de Admin</h1>
@@ -120,33 +118,18 @@ export default function AdminPage() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-5">
-        {/* Password */}
-        <div className="trading-card p-4 space-y-4">
+        {/* Date */}
+        <div className="trading-card p-4">
           <div>
             <label className="block text-xs text-text-secondary mb-1.5">
-              Contraseña de admin <span className="text-gex-negative">*</span>
+              Fecha <span className="text-gex-negative">*</span>
             </label>
             <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
               className="w-full bg-bg-secondary border border-bg-border rounded-lg px-3 py-2 text-sm text-text-primary focus:outline-none focus:border-accent-blue transition-colors"
-              placeholder="••••••••"
             />
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs text-text-secondary mb-1.5">
-                Fecha <span className="text-gex-negative">*</span>
-              </label>
-              <input
-                type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                className="w-full bg-bg-secondary border border-bg-border rounded-lg px-3 py-2 text-sm text-text-primary focus:outline-none focus:border-accent-blue transition-colors"
-              />
-            </div>
           </div>
         </div>
 

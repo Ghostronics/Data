@@ -6,12 +6,7 @@ import type { UploadPayload } from "@/lib/types";
 export async function POST(req: NextRequest) {
   try {
     const body = (await req.json()) as UploadPayload;
-    const { password, date, vvix, skew, images, overrides } = body;
-
-    // Auth
-    if (password !== process.env.ADMIN_PASSWORD) {
-      return NextResponse.json({ error: "Contraseña incorrecta" }, { status: 401 });
-    }
+    const { date, vvix, skew, images, overrides } = body;
 
     // Validation
     if (!date || !vvix || !skew || !images?.length) {
