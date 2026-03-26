@@ -7,13 +7,17 @@ import Link from "next/link";
 export const revalidate = 60; // Revalidate every minute
 
 async function getTodaySession(): Promise<TradingSession | null> {
-  const today = new Date().toISOString().slice(0, 10);
-  const { data } = await supabase
-    .from("trading_sessions")
-    .select("*")
-    .eq("date", today)
-    .single();
-  return data as TradingSession | null;
+  try {
+    const today = new Date().toISOString().slice(0, 10);
+    const { data } = await supabase
+      .from("trading_sessions")
+      .select("*")
+      .eq("date", today)
+      .single();
+    return data as TradingSession | null;
+  } catch {
+    return null;
+  }
 }
 
 export default async function HomePage() {

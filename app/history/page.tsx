@@ -32,12 +32,16 @@ const BIAS_META: Record<DayBias, { color: string; icon: React.ReactNode; label: 
 };
 
 async function getSessions(): Promise<TradingSession[]> {
-  const { data } = await supabase
-    .from("trading_sessions")
-    .select("id, date, regime, day_bias, recommended_instrument, skip_day, nq_gex, es_gex, vvix, skew, created_at, updated_at, nq_dex, nq_hvl_all, nq_hvl_0dte, nq_call_resist, nq_put_support, es_dex, es_hvl_all, es_hvl_0dte, es_call_resist, es_put_support, vix_gex_net, vix_call_resist, vix_hvl, analysis_text, setup_a, setup_b, image_urls")
-    .order("date", { ascending: false })
-    .limit(60);
-  return (data as TradingSession[]) ?? [];
+  try {
+    const { data } = await supabase
+      .from("trading_sessions")
+      .select("id, date, regime, day_bias, recommended_instrument, skip_day, nq_gex, es_gex, vvix, skew, created_at, updated_at, nq_dex, nq_hvl_all, nq_hvl_0dte, nq_call_resist, nq_put_support, es_dex, es_hvl_all, es_hvl_0dte, es_call_resist, es_put_support, vix_gex_net, vix_call_resist, vix_hvl, analysis_text, setup_a, setup_b, image_urls")
+      .order("date", { ascending: false })
+      .limit(60);
+    return (data as TradingSession[]) ?? [];
+  } catch {
+    return [];
+  }
 }
 
 export default async function HistoryPage() {
